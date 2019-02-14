@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- beans:前缀 -->
+<!-- 因为默认的约束改成了  security不再是beans了，所以配置beans的就要使用beans:beans操作，配置security的时候就不需要了，因为security配置比较多-->
+<!-- 跟之前的配置文件的含义比较相似，之前默认是beans，所以配置bean不需要加前缀，但是如果配置其他就要加前缀  -->
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dubo="http://code.alibabatech.com/schema/dubbo"
+             xsi:schemaLocation="
+    http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+	http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/security
+	http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <!--登录、登录失败、注册、注册失败、各种静态资源-->
+    <!-- 设置不登陆也可以访问的资源（不参与安全控制） -->
+    <!-- /*.html：根目录下的html页面，不包含子目录 -->
+    <http pattern="/*.html" security="none"></http>
+    <http pattern="/css/**" security="none"></http>
+    <http pattern="/img/**" security="none"></http>
+    <http pattern="/js/**" security="none"></http>
+    <http pattern="/plugins/**" security="none"></http>
+    <http pattern="/seller/add.do" security="none"></http>
+    <!-- 页面的拦截规则 use-expressions:是否启动spel表达式，默认为true，如果是true那access的编写方式为hasRole('ROLE_USER')-->
+    <http use-expressions="false">
+        <!-- /*:当前根目录，不包含子目录 ; /**:当前根目录及其子目录 -->
+        <!-- 当前用户必须有ROLE_USER的角色才可以访问根目录及所属子目录的资源 -->
+        <intercept-url pattern="/**" access="ROLE_SELLER"/>
+        <!-- 开启表单登录功能 -->
+        <!--
+        login-page配置自定义登陆页面;
+        default-target-url：配置登陆成功的页面;
+        authentication-failure-url:配置登陆失败的页面 ;
+        login-processing-url:设置访问登录页面的路径，默认是/login;
+        username-parameter:设置登录页面用户的name的值，默认username;
+        password-parameter:设置登录页面密码的name的值，默认password;
+        always-use-default-target:设置总是跳转到默认页面-->
+        <form-login login-page="/shoplogin.html" default-target-url="/admin/index.html"
+                    authentication-failure-url="/shoplogin.html" always-use-default-target="true"/>
+        <!-- 关闭csrf操作 -->
+        <csrf disabled="true"/>
+
+        <!-- 用于配置http头信息过滤器的元素 -->
+        <headers>
+            <!-- DENY:表示该页面不允许在 frame 中展示,默认值
+                  SAMEORIGIN:表示该页面可以在相同域名页面的 frame中展示   http://localhost:9001/admin/index.html    http://localhost:9001/admin/brand.html
+                  ALLOW-FROM:表示该页面可以在指定来源的 frame 中展示 http://localhost:9001/admin/index.html  www.baidu.com
+             -->
+            <frame-options policy="SAMEORIGIN"/>
+        </headers>
+
+        <!-- 登出操作，自动产生/logout路径 -->
+        <!-- logout-url:设置登出路径 ;logout-success-url:登出 成功跳转的页面-->
+        <logout/>
+    </http>
+
+    <!-- &lt;!&ndash; 认证管理器 &ndash;&gt;
+     <authentication-manager>
+         <authentication-provider>
+             &lt;!&ndash; 管理的角色 &ndash;&gt;
+             &lt;!&ndash; 如果登录的是admin，就会访问admin所对应的 ROLE_USER的目录，如果不是就不能访问&ndash;&gt;
+             <user-service>
+                 <user name="admin" password="123456" authorities="ROLE_ADMIN"/>
+                 <user name="nbb" password="123" authorities="ROLE_ADMIN"/>
+             </user-service>
+         </authentication-provider>
+     </authentication-manager>-->
+<!--认证管理器-->
+    <authentication-manager>
+        <authentication-provider user-service-ref="userDetailService">
+        <password-encoder ref="bcryptEncoder"></password-encoder>
+        </authentication-provider>
+    </authentication-manager>
+
+    <!--认证类-->
+    <beans:bean id="userDetailService" class="com.pyg.shop.service.UserDetailServiceImpl">
+        <beans:property name="sellerService" ref="sellerService"></beans:property>
+    </beans:bean>
+
+    <!--引用doubo;-->
+    <!-- 引用dubbo 服务 -->
+    <dubbo:application name="pinyougou-shop-web" />
+    <dubbo:registry address="zookeeper://192.168.25.153:2181"/>
+    <!--配置inface就是扫描这个UserDetailsService这个接口，调用接口查询数据库-->
+    <dubo:reference id="sellerService" interface="com.itheima.sellergoods.service.SellerService"></dubo:reference>
+
+
+    <beans:bean id="bcryptEncoder"
+                class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+
+</beans:beans>
