@@ -1,37 +1,140 @@
-app.controller('searchController',function ($scope,searchService) { //searchServic注入进来
+app.controller('searchController', function ($scope, searchService) { //searchServic注入进来
     //搜索 条件封装对象
-    $scope.searchMap={'keywords':'','category':'','brand':'','spec':{},'price':''};
-    $scope.search=function () {
+    $scope.searchMap = {
+        'keywords': '',
+        'category': '',
+        'brand': '',
+        'spec': {},
+        'price': '',
+        'pageNo': 1,
+        'pageSize': 40,
+        'sort':'',
+        'sortField':''
+    };
+/* —————————————————————————————————— */
+    $scope.search = function () {
+        //不管什么类型都要经过这一步     parseInt转化成 数字
+        $scope.searchMap.pageNo = parseInt($scope.searchMap.pageNo);
+
         searchService.search($scope.searchMap).success(    //searchMap 在页面山进行绑定
             function (response) {
-                 alert(response);
-              $scope.resultMap=response;//搜索返回的结果
+                alert(response);
+                $scope.resultMap = response;//搜索返回的结果
+
+                buildPageLabel();//在查询后调用此方法    调用分页的方法
             }
         )
     }
 
-
+/*------------------------------------------------------------*/
     //添加搜索项
-    $scope.addSearchItem=function(key,value) {
-        if (key == 'category' || key == 'brand') {//如果点击的是分类或者是品牌
+    $scope.addSearchItem = function (key, value) {
+        if (key == 'category' || key == 'brand' || key == 'price') {//如果点击的是分类或者是品牌或价格
             $scope.searchMap[key] = value;
         } else { //否则是规格
 
-                $scope.searchMap.spec[key] = value;
+            $scope.searchMap.spec[key] = value;
+        }
+        $scope.search();//执行搜索
+    }
+
+/*
+-----------------------------------------------------------*/
+
+    //移除复合搜索条件       页面164行调用
+    $scope.removeSearchItem = function (key) {
+        if (key == "category" || key == "brand" || key == 'price') {//如果是分类或品牌或者是价格
+            $scope.searchMap[key] = "";
+        } else {//否则是规格
+            delete $scope.searchMap.spec[key];//移除此属性
+        }
+        $scope.search();//执行搜索
+    }
+
+/*
+----------------------------------------------------------*/
+
+    //构建分页标签(totalPages为总页数)
+    buildPageLabel = function () {
+        $scope.pageLabel = [];//新增分页栏属性
+        var maxPageNo = $scope.resultMap.totalPages;//得到最后页码
+        var firstPage = 1;//开始页码
+        var lastPage = maxPageNo;//截止页码
+
+        $scope.firstDot = true;//前面有点
+        $scope.lastDot = true;//后边有点
+
+        if ($scope.resultMap.totalPages > 5) {  //如果总页数大于5页,显示部分页码
+            if ($scope.searchMap.pageNo <= 3) {//如果当前页小于等于3  显示前五页 1 2 3 4 5
+                lastPage = 5; //前5页
+
+                $scope.firstDot = false;//前面没点
+
+            } else if ($scope.searchMap.pageNo >= lastPage - 2) {//如果当前页大于等于最大页码-2  (100 页 当前是99 页）
+                firstPage = maxPageNo - 4;		 //后5页------？                    96 97      98 99 100
+
+                $scope.lastDot = false;//后边没点
+
+            } else { //显示当前页为中心的5页
+                firstPage = $scope.searchMap.pageNo - 2;
+                lastPage = $scope.searchMap.pageNo + 2;
             }
-            $scope.search();//执行搜索
+
+        } else {
+            $scope.firstDot = false;//前面无点
+            $scope.lastDot = false;//后边无点
         }
 
-
-//移除复合搜索条件       页面164行调用
-        $scope.removeSearchItem = function (key) {
-            if (key == "category" || key == "brand") {//如果是分类或品牌
-                $scope.searchMap[key] = "";
-            } else {//否则是规格
-                delete $scope.searchMap.spec[key];//移除此属性
-            }
-            $scope.search();//执行搜索
+        //循环产生页码标签
+        for (var i = firstPage; i <= lastPage; i++) {
+            $scope.pageLabel.push(i);
         }
+    }
+
+/* -----------------------------------------------------------   */
+
+
+    /*  修改页码执行查询*/
+
+//根据页码查询
+    $scope.queryByPage = function (pageNo) {
+        //页码验证
+        if (pageNo < 1 || pageNo > $scope.resultMap.totalPages) {
+            return;
+        }
+        $scope.searchMap.pageNo = pageNo;
+        $scope.search();  //查询
+    }
+
+
+    /*    ==============================================================   */
+
+//判断当前页为第一页
+    $scope.isTopPage=function(){
+        if($scope.searchMap.pageNo==1){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    //判断当前页是否未最后一页
+    $scope.isEndPage=function(){
+        if($scope.searchMap.pageNo==$scope.resultMap.totalPages){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+/*---------------------------------------------*/
+
+//设置排序规则
+    $scope.sortSearch=function(sortField,sort){
+        $scope.searchMap.sortField=sortField;
+        $scope.searchMap.sort=sort;
+        $scope.search();  //  调用 查询
+    }
+
 
 
 

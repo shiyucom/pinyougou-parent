@@ -87,7 +87,7 @@
 										<!--searchAutoComplete-->
 										<div class="input-append">
 											<input type="text" id="autocomplete" ng-model="searchMap.keywords" type="text" class="input-error input-xxlarge" />
-											<!--searchMap.pageNo=1;-->
+											<!--searchMap.pageNo=1;   调用搜索前将起始页码设置为-->
 											<button class="sui-btn btn-xlarge btn-danger" ng-click="searchMap.pageNo=1;search()" type="button">搜索</button>
 										</div>
 									</form>
@@ -165,6 +165,7 @@
 					<li class="tag" ng-if="searchMap.category!=''" ng-click="removeSearchItem('category')">商品分类：{{searchMap.category}}<i class="sui-icon icon-tb-close"></i></li>
 					<li class="tag" ng-if="searchMap.brand!=''" ng-click="removeSearchItem('brand')">品牌：{{searchMap.brand}}<i class="sui-icon icon-tb-close"></i></li>
 					<!--'spec':{"网络":"4G","机身内存":"16G"}-->
+                                                         <!-- 增加面包屑-->
 					<li class="tag" ng-repeat="(key,value) in searchMap.spec" ng-click="removeSearchItem(key)">{{key}}：{{value}}<i class="sui-icon icon-tb-close"></i></li>
 					<li class="tag" ng-if="searchMap.price!=''" ng-click="removeSearchItem('price')">价格：{{searchMap.price}}<i class="sui-icon icon-tb-close"></i></li>
 					
@@ -293,6 +294,7 @@
 					<div class="navbar-inner filter">
 						<ul class="sui-nav">
 							<li class="active">
+                                <!--   //设置排序规则-->
 								<a href="#" ng-click="sortSearch('','')">综合</a>
 							</li>
 							<li>

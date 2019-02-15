@@ -5,6 +5,7 @@ import com.pinyougou.pojo.TbItem;
 import com.pinyougou.search.service.ItemSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.*;
@@ -38,6 +39,13 @@ public class ItemSearchServiceImpl implements ItemSearchService {
         //    服务器向页面传递数据  rows ： [....]
         map.put("rows", page.getContent()); //将查询的数据存储到map中
       */
+
+
+        //关键字空格处理
+        String keywords = (String) searchMap.get("keywords");
+        searchMap.put("keywords", keywords.replace(" ", ""));//关键字去掉空格
+
+
 
 
         Map map = new HashMap<>();
@@ -87,7 +95,7 @@ public class ItemSearchServiceImpl implements ItemSearchService {
             query.addFilterQuery(filterQuery);
         }
 
-
+/*-----------------------------------------------------*/
 
         //1.3按照商品品牌过滤
         if (!"".equals(searchMap.get("brand"))) {  //如果客户选择了品牌
@@ -97,7 +105,7 @@ public class ItemSearchServiceImpl implements ItemSearchService {
             query.addFilterQuery(filterQuery);
         }
 
-
+/*------------------------------------------------------*/
         //1.4按照商品规格过滤
         if (searchMap.get("spec") != null) {
             Map<String, String> specMap = (Map<String, String>) searchMap.get("spec");
@@ -108,6 +116,57 @@ public class ItemSearchServiceImpl implements ItemSearchService {
                 query.addFilterQuery(filterQuery);
             }
 
+        }
+/*--------------------------------------------------------*/
+        //1.5按价格筛选.....
+        if(!"".equals(searchMap.get("price"))){
+            String[] price = ((String) searchMap.get("price")).split("-");
+            if(!price[0].equals("0")){//如果最低价格不等于0
+                Criteria filterCriteria=new Criteria("item_price").greaterThanEqual(price[0]);//大于
+                FilterQuery filterQuery=new SimpleFilterQuery(filterCriteria);
+                query.addFilterQuery(filterQuery);
+            }
+            if(!price[1].equals("*")){//如果最高价格不等于*  不等于*也就没有限制了
+                Criteria filterCriteria=new  Criteria("item_price").lessThanEqual(price[1]);//小于
+                FilterQuery filterQuery=new SimpleFilterQuery(filterCriteria);
+                query.addFilterQuery(filterQuery);
+            }
+        }
+
+/*______________________________________________________________*/
+
+        //1.6 分页查询
+        Integer pageNo= (Integer) searchMap.get("pageNo");//提取页码
+        if(pageNo==null){
+            pageNo=1;//默认第一页
+        }
+        Integer pageSize=(Integer) searchMap.get("pageSize");//每页记录数即 页大小
+        if(pageSize==null){
+            pageSize=20;//默认20
+        }
+        // （页码—1）乘以页大小  （页码—1）*页大小
+        query.setOffset((pageNo-1)*pageSize);//从第几条记录查询    setOffset是起始索引
+        query.setRows(pageSize);  //每页的记录数
+
+/**
+ * 根据关键字搜索列表
+ * @param keywords
+ * @return
+ */
+/*----------------------------------------------------------*/
+        //1.7排序
+        String sortValue= (String) searchMap.get("sort");//升序ASC    降序 DESC
+        String sortField= (String) searchMap.get("sortField");//排序字段
+        if(sortValue!=null && !sortValue.equals("")){ //如果值不为空，并且排序的值不等于空字符串
+            if(sortValue.equals("ASC")){ //表示是升序
+
+             Sort sort=new Sort(Sort.Direction.ASC, "item_"+sortField);
+                query.addSort(sort);  //添加排序
+            }
+            if(sortValue.equals("DESC")){
+                Sort sort=new Sort(Sort.Direction.DESC, "item_"+sortField);
+                query.addSort(sort);  //添加排序
+            }
         }
 
 
@@ -134,6 +193,9 @@ public class ItemSearchServiceImpl implements ItemSearchService {
 
         }
         map.put("rows", page.getContent());
+
+        map.put("totalPages", page.getTotalPages());//返回总页数
+        map.put("total", page.getTotalElements());//返回总记录数
         return map;
 
     }
