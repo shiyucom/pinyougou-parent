@@ -8,4 +8,12 @@ app.controller("contentController",function($scope,contentService){
             }
         );
     }
+
+
+   //x需求； 用户在首页的搜索框输入关键字，点击搜索后自动跳转到搜索页查询
+    //搜索跳转
+    $scope.search=function () {
+        location.href="http://localhost:9104/search.html#?keywords="+$scope.keywords;
+    }
+
 });

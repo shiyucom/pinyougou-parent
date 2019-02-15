@@ -1,6 +1,6 @@
-app.controller('searchController', function ($scope, searchService) { //searchServic注入进来
+app.controller('searchController', function ($scope,$location,searchService) { //searchServic注入进来
     //搜索 条件封装对象
-    $scope.searchMap = {
+    $scope.searchMap = {           /* 添加location服务用于接收参数*/
         'keywords': '',
         'category': '',
         'brand': '',
@@ -11,6 +11,17 @@ app.controller('searchController', function ($scope, searchService) { //searchSe
         'sort':'',
         'sortField':''
     };
+    //用户在首页的搜索框输入关键字，点击搜索后自动跳转到搜索页查询
+    //加载查询字符串
+    $scope.loadkeywords=function(){
+        $scope.searchMap.keywords=  $location.search()['keywords'];  //??怎么回事？
+        /*keywords 和 contentController.js里边的keywords一样*/
+        $scope.search();
+    }
+
+
+
+
 /* —————————————————————————————————— */
     $scope.search = function () {
         //不管什么类型都要经过这一步     parseInt转化成 数字

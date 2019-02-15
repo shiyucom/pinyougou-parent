@@ -76,8 +76,9 @@ ng-init="findByCategoryId(1)">
 							<form action="" class="sui-form form-inline">
 								<!--searchAutoComplete-->
 								<div class="input-append">
-									<input type="text" id="autocomplete" type="text" class="input-error input-xxlarge" />
-									<button class="sui-btn btn-xlarge btn-danger" type="button">搜索</button>
+									<!--为了实现与搜索页的对接 绑定关键字 单击搜索服务跳转-->
+									<input type="text" id="autocomplete" type="text"  ng-model="keywords"  class="input-error input-xxlarge" />
+									<button class="sui-btn btn-xlarge btn-danger" ng-click="search()" type="button">搜索</button>
 								</div>
 							</form>
 						</div>
