@@ -136,6 +136,20 @@ app.controller('searchController', function ($scope, searchService) { //searchSe
     }
 
 
+/*---------------------------------------------------*/
+  /*  需求；如果用户输入的是品牌的关键字，则隐藏品牌列表*/
+
+//判断关键字是不是品牌 的子字符串
+    $scope.keywordsIsBrand=function(){
+        for(var i=0;i<$scope.resultMap.brandList.length;i++){
+            //如果标题栏包含或者出现关键字  brandLIst是{'id';11,text;''}
+            if($scope.searchMap.keywords.indexOf($scope.resultMap.brandList[i].text)>=0){
+                //上面代表；$scope.resultMap.brandList[i].text 在 $scope.searchMap.keywords. 中的位置
+                return true;
+            }
+        }
+        return false;
+    }
 
 
 

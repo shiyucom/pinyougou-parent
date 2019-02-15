@@ -199,8 +199,8 @@
 					<div class="fl ext"></div>
 				</div>
 				
-				<!--如果品牌不为空的时候才把品牌写出来 ng-if-->  <!-- searchMap.brand=='' 影藏品牌面板--> <!-- && keywordsIsBrand()==false-->
-				<div class="type-wrap logo"  ng-if="resultMap.brandList!=null && searchMap.brand=='' ">
+				<!--如果品牌不为空的时候才把品牌写出来 ng-if-->  <!-- searchMap.brand=='' 影藏品牌面板--> <!-- s说明品牌不是关键字&& keywordsIsBrand()==false-->
+				<div class="type-wrap logo"  ng-if="resultMap.brandList!=null && searchMap.brand==''&& keywordsIsBrand()==false ">
 					<div class="fl key brand">品牌</div>
 					<div class="value logos">
 						<ul class="logo-list">
