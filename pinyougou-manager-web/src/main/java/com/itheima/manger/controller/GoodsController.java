@@ -4,6 +4,8 @@ import com.alibaba.dubbo.config.annotation.Reference;
 import com.itheima.sellergoods.service.GoodsService;
 import com.pinyougou.group.Goods;
 import com.pinyougou.pojo.TbGoods;
+import com.pinyougou.pojo.TbItem;
+import com.pinyougou.search.service.ItemSearchService;
 import com.pinyougou.service.ItemPageService;
 import entity.PageResult;
 import entity.Result;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -106,6 +109,7 @@ public class GoodsController {
     public Result delete(Long[] ids) {
         try {
             goodsService.delete(ids);
+            itemSearchService.deleteByGoodsIds(Arrays.asList(ids)); // x新
             return new Result(true, "删除成功");
         } catch (Exception e) {
             e.printStackTrace();
@@ -126,11 +130,26 @@ public class GoodsController {
         return goodsService.findPage(goods, page, rows);
     }
 
+    @Reference  // 新
+    private ItemSearchService itemSearchService;
+
     @Reference(timeout = 1000000)
     @RequestMapping("/shenhe")
     public Result shenhe(Long[] ids, String status) {
         try {
             goodsService.shenhe(ids, status);
+
+            //按照SPU ID查询 SKU列表(状态为1)    新
+            if (status.equals("1")) {//审核通过
+                List<TbItem> itemList = goodsService.findItemListByGoodsIdandStatus(ids, status);
+                //调用搜索接口实现数据批量导入   新
+                if (itemList.size() > 0) {
+                    itemSearchService.importList(itemList);
+                } else {
+                    System.out.println("没有明细数据");
+                }
+            }
+
             return new Result(true, "审核成功");
 
         } catch (Exception e) {

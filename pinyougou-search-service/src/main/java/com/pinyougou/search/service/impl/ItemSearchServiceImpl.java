@@ -25,6 +25,28 @@ public class ItemSearchServiceImpl implements ItemSearchService {
     @Autowired
     private SolrTemplate solrTemplate;
 
+
+//导入数据
+    @Override
+    public void importList(List list) {
+        solrTemplate.saveBeans(list);
+        solrTemplate.commit();
+    }
+//删除数据
+    @Override
+    public void deleteByGoodsIds(List goodsIdList) {
+        System.out.println("删除商品ID"+goodsIdList);
+        Query query=new SimpleQuery();
+        Criteria criteria=new Criteria("item_goodsid").in(goodsIdList);
+        query.addCriteria(criteria);
+        solrTemplate.delete(query);
+        solrTemplate.commit();
+    }
+
+
+
+
+
     //关键字搜索
     @Override
     public Map search(Map searchMap) {
@@ -69,6 +91,7 @@ public class ItemSearchServiceImpl implements ItemSearchService {
 
         return map;
     }
+
 
 
 
