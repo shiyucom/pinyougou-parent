@@ -15,7 +15,7 @@ public class ItemSearchController {
     private ItemSearchService itemSearchService;
 //关键字搜索
     @RequestMapping("/search.do")
-    public Map<String, Object> search(@RequestBody Map searchMap ){
+    public Map search(@RequestBody Map searchMap ){
         return itemSearchService.search(searchMap);
     }
 }

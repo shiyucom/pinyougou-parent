@@ -1,4 +1,5 @@
 package com.itheima.sellergoods.impl;
+
 import java.util.List;
 
 import com.itheima.sellergoods.service.ItemCatService;
@@ -13,102 +14,116 @@ import com.pinyougou.pojo.TbItemCatExample.Criteria;
 
 
 import entity.PageResult;
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 服务实现层
- * @author Administrator
  *
+ * @author Administrator
  */
 @Service
 public class ItemCatServiceImpl implements ItemCatService {
 
-	@Autowired
-	private TbItemCatMapper itemCatMapper;
-	
-	/**
-	 * 查询全部
-	 */
-	@Override
-	public List<TbItemCat> findAll() {
-		return itemCatMapper.selectByExample(null);
-	}
+    @Autowired
+    private TbItemCatMapper itemCatMapper;
 
-	/**
-	 * 按分页查询
-	 */
-	@Override
-	public PageResult findPage(int pageNum, int pageSize) {
-		PageHelper.startPage(pageNum, pageSize);		
-		Page<TbItemCat> page=   (Page<TbItemCat>) itemCatMapper.selectByExample(null);
-		return new PageResult(page.getTotal(), page.getResult());
-	}
+    /**
+     * 查询全部
+     */
+    @Override
+    public List<TbItemCat> findAll() {
+        return itemCatMapper.selectByExample(null);
+    }
 
-	/**
-	 * 增加
-	 */
-	@Override
-	public void add(TbItemCat itemCat) {
-		itemCatMapper.insert(itemCat);		
-	}
+    /**
+     * 按分页查询
+     */
+    @Override
+    public PageResult findPage(int pageNum, int pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        Page<TbItemCat> page = (Page<TbItemCat>) itemCatMapper.selectByExample(null);
+        return new PageResult(page.getTotal(), page.getResult());
+    }
 
-	
-	/**
-	 * 修改
-	 */
-	@Override
-	public void update(TbItemCat itemCat){
-		itemCatMapper.updateByPrimaryKey(itemCat);
-	}	
-	
-	/**
-	 * 根据ID获取实体
-	 * @param id
-	 * @return
-	 */
-	@Override
-	public TbItemCat findOne(Long id){
-		return itemCatMapper.selectByPrimaryKey(id);
-	}
+    /**
+     * 增加
+     */
+    @Override
+    public void add(TbItemCat itemCat) {
+        itemCatMapper.insert(itemCat);
+    }
 
-	/**
-	 * 批量删除
-	 */
-	@Override
-	public void delete(String[] ids) {
-		for(String id:ids){
-			itemCatMapper.deleteByPrimaryKey(id);
-		}		
-	}
-	
-	
-		@Override
-	public PageResult findPage(TbItemCat itemCat, int pageNum, int pageSize) {
-		PageHelper.startPage(pageNum, pageSize);
-		
-		TbItemCatExample example=new TbItemCatExample();
-		Criteria criteria = example.createCriteria();
-		
-		if(itemCat!=null){			
-						if(itemCat.getName()!=null && itemCat.getName().length()>0){
-				criteria.andNameLike("%"+itemCat.getName()+"%");
-			}
-	
-		}
-		
-		Page<TbItemCat> page= (Page<TbItemCat>)itemCatMapper.selectByExample(example);		
-		return new PageResult(page.getTotal(), page.getResult());
-	}
 
-	//根据id查询
-	@Override
-	public List<TbItemCat> findByparentId(Long parentId) {
+    /**
+     * 修改
+     */
+    @Override
+    public void update(TbItemCat itemCat) {
+        itemCatMapper.updateByPrimaryKey(itemCat);
+    }
+
+    /**
+     * 根据ID获取实体
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public TbItemCat findOne(Long id) {
+        return itemCatMapper.selectByPrimaryKey(id);
+    }
+
+    /**
+     * 批量删除
+     */
+    @Override
+    public void delete(String[] ids) {
+        for (String id : ids) {
+            itemCatMapper.deleteByPrimaryKey(id);
+        }
+    }
+
+
+    @Override
+    public PageResult findPage(TbItemCat itemCat, int pageNum, int pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+
+        TbItemCatExample example = new TbItemCatExample();
+        Criteria criteria = example.createCriteria();
+
+        if (itemCat != null) {
+            if (itemCat.getName() != null && itemCat.getName().length() > 0) {
+                criteria.andNameLike("%" + itemCat.getName() + "%");
+            }
+
+        }
+
+        Page<TbItemCat> page = (Page<TbItemCat>) itemCatMapper.selectByExample(example);
+        return new PageResult(page.getTotal(), page.getResult());
+    }
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    //根据id查询
+    @Override
+    public List<TbItemCat> findByparentId(Long parentId) {
 //		创建条件对象
-		TbItemCatExample example =new TbItemCatExample();
-	//
-		Criteria criteria = example.createCriteria();
-		criteria.andParentIdEqualTo(parentId); //设置真正的条件
-		return itemCatMapper.selectByExample(example); //根据条件查询
+        TbItemCatExample example = new TbItemCatExample();
+        //设置条件
+        Criteria criteria = example.createCriteria();
+        criteria.andParentIdEqualTo(parentId); //设置真正的条件
 
-	}
+        //将模板id放入缓存（以商品分类名称key）
+        List<TbItemCat> itemCatList = findAll();
+        for (TbItemCat itemCat : itemCatList) {
+            redisTemplate.boundHashOps("itemCat").put(itemCat.getName(), itemCat.getTypeId());
+
+        }
+
+
+        return itemCatMapper.selectByExample(example); //根据条件查询
+
+    }
 
 }

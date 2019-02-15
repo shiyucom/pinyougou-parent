@@ -161,7 +161,7 @@
 				<ul class="tags-choose">
 					<!--<li class="tag">全网通<i class="sui-icon icon-tb-close"></i></li>
 					<li class="tag">63G<i class="sui-icon icon-tb-close"></i></li>-->
-					
+                   <!-- //移除复合搜索-->
 					<li class="tag" ng-if="searchMap.category!=''" ng-click="removeSearchItem('category')">商品分类：{{searchMap.category}}<i class="sui-icon icon-tb-close"></i></li>
 					<li class="tag" ng-if="searchMap.brand!=''" ng-click="removeSearchItem('brand')">品牌：{{searchMap.brand}}<i class="sui-icon icon-tb-close"></i></li>
 					<!--'spec':{"网络":"4G","机身内存":"16G"}-->
@@ -183,46 +183,35 @@
 			<div class="clearfix selector">
 				
 				<!--ng-if ： 满足条件展示，不满足条件隐藏
-				    如果seachrmap中有分类信息，隐藏，没有，显示
+				    如果seachrmap中有分类信息，隐藏，没有，显示    searchMap.category=='' 隐藏分类
 				-->
 				<div class="type-wrap" ng-if="resultMap.categoryList!=null && searchMap.category==''">
 					<div class="fl key">商品分类</div>
 					<div class="fl value">
 						<!--<a href="#">手机</a>  <a href="#">电视</a>-->
-						
-						<span ng-repeat="category in resultMap.categoryList" > 
+                    <!--    点击商品分类标签-->
+
+                        <span ng-repeat="category in resultMap.categoryList" >
 						   <a href="#" ng-click="addSearchItem('category',category)">{{category}}</a>
 						</span>		
 					</div>
 					<div class="fl ext"></div>
 				</div>
 				
-				
-				<div class="type-wrap logo"  ng-if="resultMap.brandList!=null && searchMap.brand=='' && keywordsIsBrand()==false">
+				<!--如果品牌不为空的时候才把品牌写出来 ng-if-->  <!-- searchMap.brand=='' 影藏品牌面板--> <!-- && keywordsIsBrand()==false-->
+				<div class="type-wrap logo"  ng-if="resultMap.brandList!=null && searchMap.brand=='' ">
 					<div class="fl key brand">品牌</div>
 					<div class="value logos">
 						<ul class="logo-list">
 							<!--<li><img src="img/_/phone01.png" /></li>
 							<li><img src="img/_/phone02.png" /></li>
-							<li><img src="img/_/phone03.png" /></li>
-							<li><img src="img/_/phone04.png" /></li>
-							<li><img src="img/_/phone05.png" /></li>
-							<li><img src="img/_/phone06.png" /></li>
-							<li><img src="img/_/phone07.png" /></li>
-							<li><img src="img/_/phone08.png" /></li>
-							<li><img src="img/_/phone09.png" /></li>
 							<li><img src="img/_/phone10.png" /></li>
 							<li><img src="img/_/phone11.png" /></li>
 							<li><img src="img/_/phone12.png" /></li>
-							<li><img src="img/_/phone13.png" /></li>
-							<li><img src="img/_/phone14.png" /></li>
-							<li><img src="img/_/phone05.png" /></li>
-							<li><img src="img/_/phone06.png" /></li>
-							<li><img src="img/_/phone07.png" /></li>
-							<li><img src="img/_/phone02.png" /></li>-->
-							
+							-->
 							<li ng-repeat="brand in resultMap.brandList">
-								<a href="#" ng-click="addSearchItem('brand',brand.text)">{{brand.text}}</a>
+                                <!--点击品牌-->
+                                <a href="#" ng-click="addSearchItem('brand',brand.text)">{{brand.text}}</a>
 							</li>				
 						</ul>
 					</div>
@@ -231,14 +220,16 @@
 						<a href="javascript:void(0);">更多</a>
 					</div>
 				</div>
-				<!--'spec':{"机身内存":"16G"}};-->
+				                                            <!--'spec':{"机身内存":"16G"}};-->
+                                                            <!--searchMap.spec[spec.text]==null 影藏规格-->
 				<div class="type-wrap" ng-repeat="spec in resultMap.specList" ng-if="searchMap.spec[spec.text]==null">
-					<!--[  {   "id":27,"text":"网络",   options:[  {optionName:....},{}  ]    }   ]-->
-					<div class="fl key">{{spec.text}}</div>
-					<div class="fl value">
-						<ul class="type-list">
-							<li ng-repeat="option in spec.options">
-								<a href="#" ng-click="addSearchItem(spec.text,option.optionName)">{{option.optionName}}</a>
+                    <!--[  {   "id":27,"text":"网络",   options:[  {optionName:....},{}  ]    }   ]-->
+                    <div class="fl key">{{spec.text}}</div>
+                    <div class="fl value">
+                        <ul class="type-list">
+                            <li ng-repeat="option in spec.options">
+                                <!--    点击规格-->
+                                <a href="#" ng-click="addSearchItem(spec.text,option.optionName)">{{option.optionName}}</a>
 							</li>							
 						</ul>
 					</div>

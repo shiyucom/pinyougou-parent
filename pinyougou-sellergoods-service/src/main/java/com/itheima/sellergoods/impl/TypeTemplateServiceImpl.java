@@ -3,7 +3,7 @@ package com.itheima.sellergoods.impl;
 import java.util.List;
 import java.util.Map;
 
-import com.alibaba.fastjson.JSON;
+
 import com.itheima.sellergoods.service.TypeTemplateService;
 import com.pinyougou.mapper.TbSpecificationOptionMapper;
 import com.pinyougou.pojo.TbSpecificationOption;
@@ -16,9 +16,10 @@ import com.pinyougou.mapper.TbTypeTemplateMapper;
 import com.pinyougou.pojo.TbTypeTemplate;
 import com.pinyougou.pojo.TbTypeTemplateExample;
 import com.pinyougou.pojo.TbTypeTemplateExample.Criteria;
-
+import com.alibaba.fastjson.JSON;
 
 import entity.PageResult;
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 服务实现层
@@ -114,40 +115,68 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
         }
 
         Page<TbTypeTemplate> page = (Page<TbTypeTemplate>) typeTemplateMapper.selectByExample(example);
+
+        //缓存处理   调用下面的方法
+            saveToRedis();
+
         return new PageResult(page.getTotal(), page.getResult());
     }
 
+   /**
+    *  将我们的品牌列表 和 规格列表   放入缓存
+    *  */
+    @Autowired
+    private RedisTemplate redisTemplate;
 
-        /**
-         * 根据模板的id，查询规格
-         * 参数1：模版id
-         */
-        @Override
-        public List<Map> findSpecList(Long id){
+    private void saveToRedis() {
+        List<TbTypeTemplate> templateList = findAll();
+        for (TbTypeTemplate template : templateList) {
 
-            //根据模版的id， 查询模板信息
-            TbTypeTemplate typeTemplate = typeTemplateMapper.selectByPrimaryKey(id);
+          //得到品牌列表  模板id作为key 品牌列表作为值
+             List brandList= JSON.parseArray(template.getBrandIds(),Map.class);
+            redisTemplate.boundHashOps("brandList").put(template.getId(),brandList);
 
-            //将模版信息中的spec_ids的json串转化成集合
-            //fastJson操作，将json字符串转化为List集合，
-            //参数1：json字符串
-            //参数2：list集合的泛型
-            List<Map> list = JSON.parseArray(typeTemplate.getSpecIds(), Map.class);
-            //[{"id":27,"text":"网络"},{"id":32,"text":"机身内存"}]
-            //遍历集合
-            for (Map map : list) {
-                // 根据规格的id，查询规格选项列表
-                TbSpecificationOptionExample example = new TbSpecificationOptionExample();
-                com.pinyougou.pojo.TbSpecificationOptionExample.Criteria criteria = example
-                        .createCriteria();
-                criteria.andSpecIdEqualTo(new Long((Integer) map.get("id")));
 
-                List<TbSpecificationOption> options = specificationOptionMapper
-                        .selectByExample(example);
-                //将获取到数据封装到原来的规格信息中
-                map.put("options", options);
-            }
-            //[{"id":27,"text":"网络",options:[{id：XXX,optionanme:XXXX},{}]}]
-            return list;
+            //得到规格列表 都是以模板id作为key  规格列表作为值
+            List<Map> specList = findSpecList(template.getId());
+            redisTemplate.boundHashOps("specList").put(template.getId(),specList);
+
         }
+        System.out.println("缓存品牌列表");
+        System.out.println("缓存规格列表");
+    }
+
+
+    /**
+     * 根据模板的id，查询规格
+     * 参数1：模版id
+     */
+    @Override
+    public List<Map> findSpecList(Long id) {
+
+        //根据模版的id， 查询模板信息
+        TbTypeTemplate typeTemplate = typeTemplateMapper.selectByPrimaryKey(id);
+
+        //将模版信息中的spec_ids的json串转化成集合
+        //fastJson操作，将json字符串转化为List集合，
+        //参数1：json字符串
+        //参数2：list集合的泛型
+        List<Map> list = JSON.parseArray(typeTemplate.getSpecIds(), Map.class);
+        //[{"id":27,"text":"网络"},{"id":32,"text":"机身内存"}]
+        //遍历集合
+        for (Map map : list) {
+            // 根据规格的id，查询规格选项列表
+            TbSpecificationOptionExample example = new TbSpecificationOptionExample();
+            com.pinyougou.pojo.TbSpecificationOptionExample.Criteria criteria = example
+                    .createCriteria();
+            criteria.andSpecIdEqualTo(new Long((Integer) map.get("id")));
+
+            List<TbSpecificationOption> options = specificationOptionMapper
+                    .selectByExample(example);
+            //将获取到数据封装到原来的规格信息中
+            map.put("options", options);
+        }
+        //[{"id":27,"text":"网络",options:[{id：XXX,optionanme:XXXX},{}]}]
+        return list;
+    }
 }

@@ -8,5 +8,5 @@ public interface ItemSearchService {
      * @param keywords
      * @return  返回的是是列表， 接受的是关键字searchMap
      */
-    public Map<String,Object> search(Map searchMap);
+    public Map search(Map searchMap);
 }
